@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 export default function Home() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -9,31 +9,59 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // 组件卸载时清理内存
+  useEffect(() => {
+    return () => {
+      if (processedImage) {
+        URL.revokeObjectURL(processedImage);
+      }
+    };
+  }, [processedImage]);
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // 验证文件类型
-      if (!file.type.startsWith("image/")) {
-        setError("请选择图片文件");
-        return;
-      }
-
-      // 验证文件大小（最大 10MB）
-      if (file.size > 10 * 1024 * 1024) {
-        setError("图片大小不能超过 10MB");
-        return;
-      }
-
-      setError(null);
-      setProcessedImage(null);
-
-      // 读取文件并显示预览
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      processFile(file);
     }
+  };
+
+  const processFile = (file: File) => {
+    // 验证文件类型
+    if (!file.type.startsWith("image/")) {
+      setError("请选择图片文件");
+      return;
+    }
+
+    // 验证文件大小（最大 10MB）
+    if (file.size > 10 * 1024 * 1024) {
+      setError("图片大小不能超过 10MB");
+      return;
+    }
+
+    setError(null);
+    setProcessedImage(null);
+
+    // 读取文件并显示预览
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      setSelectedImage(e.target?.result as string);
+    };
+    reader.onerror = () => {
+      setError("图片读取失败，请重试");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
   };
 
   const handleRemoveBackground = async () => {
@@ -49,7 +77,7 @@ export default function Home() {
 
       // 创建 FormData 发送到 API
       const formData = new FormData();
-      formData.append("image", blob, "image.png");
+      formData.append("image_file", blob, "image.png");
 
       // 调用后端 API
       const apiResponse = await fetch("/api/remove-bg", {
@@ -85,6 +113,10 @@ export default function Home() {
   };
 
   const handleReset = () => {
+    // 释放内存
+    if (processedImage) {
+      URL.revokeObjectURL(processedImage);
+    }
     setSelectedImage(null);
     setProcessedImage(null);
     setError(null);
@@ -107,6 +139,8 @@ export default function Home() {
         <div
           className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition-colors cursor-pointer bg-white"
           onClick={() => fileInputRef.current?.click()}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
         >
           <input
             ref={fileInputRef}

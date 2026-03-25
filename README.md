@@ -10,6 +10,11 @@
 - 🔒 **纯内存处理**，图片不落地磁盘
 - 📥 直接下载处理后的图片
 - 🔌 使用 remove.bg API
+- ☁️ 部署在 Cloudflare Pages
+
+## 🌐 在线访问
+
+- **生产环境**: https://image-background-remover-5bk.pages.dev
 
 ## 🚀 快速开始
 

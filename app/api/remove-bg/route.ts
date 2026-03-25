@@ -4,7 +4,14 @@ export async function POST(request: NextRequest) {
   try {
     // 获取上传的图片
     const formData = await request.formData();
-    const imageFile = formData.get("image") as File | null;
+    const imageFile = formData.get("image_file") as File | null;
+
+    console.log("收到文件:", {
+      name: imageFile?.name,
+      type: imageFile?.type,
+      size: imageFile?.size,
+      exists: !!imageFile,
+    });
 
     if (!imageFile) {
       return NextResponse.json(
@@ -42,13 +49,16 @@ export async function POST(request: NextRequest) {
     const arrayBuffer = await imageFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 调用 remove.bg API
+    // 调用 remove.bg API - 使用 FormData 格式
+    const apiFormData = new FormData();
+    apiFormData.append("image_file", new Blob([buffer]), "image.png");
+    
     const removeBgResponse = await fetch("https://api.remove.bg/v1.0/removebg", {
       method: "POST",
       headers: {
         "X-Api-Key": apiKey,
       },
-      body: buffer,
+      body: apiFormData,
     });
 
     if (!removeBgResponse.ok) {
