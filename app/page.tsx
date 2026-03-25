@@ -84,9 +84,11 @@ export default function Home() {
         method: "POST",
         body: formData,
       });
+      
+      console.log('API 响应状态:', apiResponse.status);
 
       if (!apiResponse.ok) {
-        const errorData = await apiResponse.json();
+        const errorData = await apiResponse.json() as { error?: string };
         throw new Error(errorData.error || "处理失败");
       }
 
