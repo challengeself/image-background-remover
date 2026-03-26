@@ -1,6 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
-
-export async function POST(request: Request) {
+export async function POST(request: Request, env: Env) {
   try {
     const formData = await request.formData();
     const imageFile = formData.get("image_file") as File | null;
@@ -17,7 +15,14 @@ export async function POST(request: Request) {
       return Response.json({ error: "图片大小不能超过 10MB" }, { status: 400 });
     }
 
-    const apiKey = "c9XDtC2guWHRyYgUioseUqPk"; // 硬编码 API key，避免环境变量问题
+    // 从 Cloudflare 环境变量读取 API Key
+    const apiKey = env.REMOVE_BG_API_KEY;
+    if (!apiKey) {
+      console.error("API Key not found in environment variables. Available env keys:", Object.keys(env || {}));
+      return Response.json({ error: "服务器未配置 remove.bg API Key" }, { status: 500 });
+    }
+
+    console.log("Using API Key:", apiKey.substring(0, 8) + "...");
     
     const arrayBuffer = await imageFile.arrayBuffer();
     const buffer = arrayBuffer;
@@ -35,6 +40,7 @@ export async function POST(request: Request) {
 
     if (!removeBgResponse.ok) {
       const errorText = await removeBgResponse.text();
+      console.error("remove.bg API error:", errorText);
       return Response.json({ error: errorText }, { status: removeBgResponse.status });
     }
 
