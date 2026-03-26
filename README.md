@@ -99,3 +99,4 @@ remove-bg-tool/
 ## 📄 License
 
 MIT
+# Test auto-deploy
