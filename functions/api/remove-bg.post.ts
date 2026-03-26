@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return Response.json({ error: "图片大小不能超过 10MB" }, { status: 400 });
     }
 
-    const apiKey = "c9XDtC2guWHRyYgUioseUqPk";
+    const apiKey = "c9XDtC2guWHRyYgUioseUqPk"; // 硬编码 API key，避免环境变量问题
     
     const arrayBuffer = await imageFile.arrayBuffer();
     const buffer = arrayBuffer;
